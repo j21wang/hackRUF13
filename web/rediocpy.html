@@ -1,0 +1,59 @@
+<!doctype html>
+<html>
+    <head>
+        <script src="http://www.rdio.com/api/api.js?client_id=t_oGZ_-05KslYrSGzCwnsQ"></script>
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+        <script src="rdio-utils.js"></script>
+    </head>
+    <body>
+        <input type="text" />
+        <button class="playPause">play</button>
+        <button class="next">next</button>
+        <script>
+
+            var isPlay = false;
+            var count = 0;
+            var numSong = 0;
+            var resp = [];
+
+            R.ready(function(){
+                $(".playPause").click(function(evt){
+                    if(count == 0){
+                        numSong++;
+                        isPlay = true;
+                        var input=$("input").val();
+                        console.log(input);
+                        R.request({
+                            method:"search",
+                            content:{
+                                query:input,
+                                types:"Track"
+                            },
+                            success: function(response){
+                                console.log("1");
+                                resp = response.result.results;
+                                R.player.play({source:resp[0].key});
+                                R.player.next();
+                            },
+                            error: function(response){
+                                console.log("2");
+                                console.log("error: " + response.message);
+                            }
+                        });
+                        count++;
+                    } else { //pause
+                        R.player.togglePause();
+                        count++;
+                    }
+                });
+
+                $(".next").click(function(evt){
+                    numSong++;
+                    R.player.play({source:resp[numSong].key});
+                    count = 1;
+                });
+            });
+
+        </script>
+    </body>
+</html>

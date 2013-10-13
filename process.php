@@ -1,85 +1,197 @@
-<?php
-ini_set('display_errors', 'On');
-error_reporting(E_ALL);
+<?php 
+if ($_POST['submit']) {
+	// $userfile is where file went on webserver 
+	$userfile = $_FILES['userfile']['tmp_name']; 
+	// $userfile_name is original file name 
+	$userfile_name = $_FILES['userfile']['name']; 
+	// $userfile_size is size in bytes 
+	$userfile_size = $_FILES['userfile']['size']; 
+	// $userfile_type is mime type e.g. image/gif 
+	$userfile_type = $_FILES['userfile']['type']; 
+	// $userfile_error is any error encountered 
+	$userfile_error = $_FILES['userfile']['error']; 
 
-echo "hi";
+	// userfile_error was introduced at PHP 4.2.0 
+	// use this code with newer versions 
 
-if ($_POST['file'])
-{
-	require_once('RecognizeImAPI.php');
-	// $file is where file went on webserver 
-	$file = $HTTP_POST_FILES['file']['tmp_name']; 
-	// $file_name is original file name 
-	$file_name = $HTTP_POST_FILES['file']['name']; 
-	// $file_size is size in bytes 
-	$file_size = $HTTP_POST_FILES['file']['size']; 
-	// $file_type is mime type e.g. image/gif 
-	$file_type = $HTTP_POST_FILES['file']['type']; 
-	// $file_error is any error encountered 
-	$file_error = $HTTP_POST_FILES['file']['error']; 
+	if ($userfile_error > 0) { 
+		echo 'Problem: '; 
+		switch ($userfile_error) 
+		{ case 1: 
+			echo 'File exceeded upload_max_filesize'; 
+			break; 
+			case 2: 
+			echo 'File exceeded max_file_size'; 
+			break; 
+			case 3: 
+			echo 'File only partially uploaded'; 
+			break; 
+			case 4: 
+			echo 'No file uploaded'; 
+			break; 
+		} 
+		exit; 
+	} 
 
-
-
-	$saveLocation = './'$file_name; 
-
+	// put the file where we'd like it 
+	$upfile = 'uploads/'.$userfile_name;
 	// is_uploaded_file and move_uploaded_file 
-	if (is_uploaded_file($file)) 
+	if (is_uploaded_file($userfile)) 
 	{ 
-		if (!move_uploaded_file($file, $saveLocation)) 
+		if (!move_uploaded_file($userfile, $upfile)) 
 		{ 
 			echo 'Problem: Could not move file to destination directory'; 
 			exit; 
 		} 
 	} else { 
-		echo 'Problem: Possible file upload attack. Filename: '.$file_name; 
+		echo 'Problem: Possible file upload attack. Filename: '.$userfile_name; 
 		exit; 
 	} 
 
 
-$imagePath = $file_name;
-$mode = 'single';
 
-if ($mode == 'single') {
-	if (RecognizeImAPI::checkImageLimits($imagePath, $mode)) {
-		$singleOneResult = RecognizeImAPI::recognize(file_get_contents($imagePath), $mode);
-		$singleAllResults = RecognizeImAPI::recognize(file_get_contents($imagePath), $mode, TRUE);
-	} else {
-		echo "Image does not fulfill the requirements.\n";
+
+
+
+
+
+
+	// 1. Send image to Cloud OCR SDK using processImage call
+	// 2.	Get response as xml
+	// 3.	Read taskId from xml
+
+	!!! Please provide your application id and password and remove this line !!!
+		// Name of application you created
+		$applicationId = 'FoodForSong';
+	// Password should be sent to your e-mail after application was created
+	$password = 'VOiI1dJKBAHp0ZtV0HkgV027';
+	$fileName = 'barcode.jpg';
+
+	// Get path to file that we are going to recognize
+	$local_directory=dirname(__FILE__).'/uploads/';
+	$filePath = $local_directory.'/'.$fileName;
+	if(!file_exists($filePath))
+	{
+		die('File '.$filePath.' not found.');
 	}
-} else if ($mode == 'multi') {
-	if (RecognizeImAPI::checkImageLimits($imagePath, $mode)) {
-		$multiOneInstance = RecognizeImAPI::recognize(file_get_contents($imagePath), $mode);
-		$multiAllInstances = RecognizeImAPI::recognize(file_get_contents($imagePath), $mode, TRUE);
-		var_dump($multiOneInstance);
-		var_dump($multiAllInstances);
-	} else {
-		echo "Image does not fulfill the requirements.\n";
+	if(!is_readable($filePath) )
+	{
+		die('Access to file '.$filePath.' denied.');
 	}
-} else {
-	echo "Wrong recognition mode.\n";
-}
 
+	// Recognizing with English language to rtf
+	// You can use combination of languages like ?language=english,russian or
+	// ?language=english,french,dutch
+	// For details, see API reference for processImage method
+	$url = 'http://cloud.ocrsdk.com/processImage?language=english&exportFormat=rtf';
 
+	// Send HTTP POST request and ret xml response
+	$curlHandle = curl_init();
+	curl_setopt($curlHandle, CURLOPT_URL, $url);
+	curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, 1);
+	curl_setopt($curlHandle, CURLOPT_USERPWD, "$applicationId:$password");
+	curl_setopt($curlHandle, CURLOPT_POST, 1);
+	curl_setopt($curlHandle, CURLOPT_USERAGENT, "PHP Cloud OCR SDK Sample");
+	$post_array = array(
+			"my_file"=>"@".$filePath,
+			);
+	curl_setopt($curlHandle, CURLOPT_POSTFIELDS, $post_array); 
+	$response = curl_exec($curlHandle);
+	if($response == FALSE) {
+		$errorText = curl_error($curlHandle);
+		curl_close($curlHandle);
+		die($errorText);
+	}
+	$httpCode = curl_getinfo($curlHandle, CURLINFO_HTTP_CODE);
+	curl_close($curlHandle);
 
-}
-//$imageList = RecognizeImAPI::imageList();
-
-?>
-
-<!doctype html>
-<html>
-	<head>
-	</head>
-	<body>
-
-		<hr>
-		<?php
-		if ($_POST['file']))
-		{
-			var_dump($singleOneResult);
-			var_dump($singleAllResults);
+	// Parse xml response
+	$xml = simplexml_load_string($response);
+	if($httpCode != 200) {
+		if(property_exists($xml, "message")) {
+			die($xml->message);
 		}
-		?>
-	</body>
-</html>
-<?php echo "hi"; ?>
+		die("unexpected response ".$response);
+	}
+
+	$arr = $xml->task[0]->attributes();
+	$taskStatus = $arr["status"];
+	if($taskStatus != "Queued") {
+		die("Unexpected task status ".$taskStatus);
+	}
+
+	// Task id
+	$taskid = $arr["id"];  
+
+	// 4. Get task information in a loop until task processing finishes
+	// 5. If response contains "Completed" staus - extract url with result
+	// 6. Download recognition result (text) and display it
+
+	$url = 'http://cloud.ocrsdk.com/getTaskStatus';
+	$qry_str = "?taskid=$taskid";
+
+	// Check task status in a loop until it is finished
+	// TODO: support states indicating error
+	while(true)
+	{
+		sleep(5);
+		$curlHandle = curl_init();
+		curl_setopt($curlHandle, CURLOPT_URL, $url.$qry_str);
+		curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($curlHandle, CURLOPT_USERPWD, "$applicationId:$password");
+		curl_setopt($curlHandle, CURLOPT_USERAGENT, "PHP Cloud OCR SDK Sample");
+		$response = curl_exec($curlHandle);
+		$httpCode = curl_getinfo($curlHandle, CURLINFO_HTTP_CODE);
+		curl_close($curlHandle);
+
+		// parse xml
+		$xml = simplexml_load_string($response);
+		if($httpCode != 200) {
+			if(property_exists($xml, "message")) {
+				die($xml->message);
+			}
+			die("Unexpected response ".$response);
+		}
+		$arr = $xml->task[0]->attributes();
+		$taskStatus = $arr["status"];
+		if($taskStatus == "Queued" || $taskStatus == "InProgress") {
+			// continue waiting
+			continue;
+		}
+		if($taskStatus == "Completed") {
+			// exit this loop and proceed to handling the result
+			break;
+		}
+		if($taskStatus == "ProcessingFailed") {
+			die("Task processing failed: ".$arr["error"]);
+		}
+		die("Unexpected task status ".$taskStatus);
+	}
+
+	// Result is ready. Download it
+
+	$url = $arr["resultUrl"];   
+	$curlHandle = curl_init();
+	curl_setopt($curlHandle, CURLOPT_URL, $url);
+	curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, 1);
+	// Warning! This is for easier out-of-the box usage of the sample only.
+	// The URL to the result has https:// prefix, so SSL is required to
+	// download from it. For whatever reason PHP runtime fails to perform
+	// a request unless SSL certificate verification is off.
+	curl_setopt($curlHandle, CURLOPT_SSL_VERIFYPEER, false);
+	$response = curl_exec($curlHandle);
+	curl_close($curlHandle);
+
+	// Let user donwload rtf result
+	header('Content-type: application/rtf');
+	header('Content-Disposition: attachment; filename="file.rtf"');
+	echo $response;
+
+
+
+
+
+
+
+
+}

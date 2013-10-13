@@ -1,0 +1,18 @@
+<!doctype html>
+<html>
+    <head>
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    </head>
+    <body>
+        <input type="text" />
+        <button class="play">play</button>
+        <button class="stop">stop</button>
+        <script>
+            var value;
+            $(".play").click(function(evt){
+                value = $('input').val();
+                window.location.href = 'http://codeniko.net/hack/web/getname.php?foodname='+value;
+                });
+        </script>
+    </body>
+</html>
