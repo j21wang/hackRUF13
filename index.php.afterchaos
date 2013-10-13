@@ -68,12 +68,11 @@ if ($_POST['submit']) {
         <h1 id="mainTitle">Food for Thought.</h1> 
         <h1 id="uploadCode">Upload a Barcode</h1> 
             <form enctype="multipart/form-data" action="index.php" method="post"> 
-                <input id="maxFile" type="hidden" name="MAX_FILE_SIZE" value="10000000"/> 
-                <input id="userButton" name="userfile" type="file"/> 
-                <input class="button" type="submit" name="submit" value="Upload"/> 
+                <input id="maxFile" type="hidden" name="MAX_FILE_SIZE" value="10000000"> 
+                <input id="userButton" name="userfile" type="file"> 
+                <input class="button" type="submit" name="submit" value="Upload"> 
             </form> 
         </div>
-        <img src="barcode.jpg">
     </center>
     </body> 
 </html> 

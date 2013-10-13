@@ -1,25 +1,34 @@
 <!doctype html>
 <html>
      <head>
-        <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
         <script src="http://www.rdio.com/api/api.js?client_id=t_oGZ_-05KslYrSGzCwnsQ"></script>
         <script src="http://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+        <script src="../foundation/js/foundation.min.js"></script>
         <script src="rdio-utils.js"></script>
+        <link rel="stylesheet" type="text/css" href="getPic.css"/>
+<link href='http://fonts.googleapis.com/css?family=Averia+Gruesa+Libre' rel='stylesheet' type='text/css'>
     </head>
     <body>
-        <button id="playPause">Play</button>
-        <button id="next" value= "next">next</button>
-        <div id="someimage">
+        <center>
+        <h1> Food for Thought. </h1>
+        <div id="container">
+        <div id="imgDiv">
         </div>
+        </div>
+        </center>
      <script>
-        var food  = '<?php session_start(); echo $_SESSION['foodName'];?>';
+        $(document).ready(function(){
+
+            var food  = '<?php session_start(); echo $_SESSION['foodName'];?>';
+            var fullfood = '<?php session_start() ; echo $_SESSION['full'];?>'; 
 
         function getUrlVars() {
             var vars = {};
             var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
             vars[key] = value;
             });
-                return vars;
+            return vars;
         }
 
         var isPlay = false;
@@ -37,9 +46,11 @@
                     types:"Track"
                 },
                 success: function(response){
-                    console.log(response);
                     resp = response.result.results;
-                    R.player.play({source:resp[0].key});
+                    var embed = resp[0].embedUrl;
+                    //R.player.play({source:resp[0].key});
+
+                    $("#container").prepend('<object width="390" height="80"><param name="movie" value="'+embed+'"></param><param name="allowFullScreen" value="true"></param><param name="allowscriptaccess" value="always"></param><embed src="'+embed+'" type="application/x-shockwave-flash" allowscriptaccess="always" allowfullscreen="true" width="390" height="80"></embed></object>');
                     R.player.next();
                 },
                 error: function(response){
@@ -48,9 +59,9 @@
                 }
             });
 
-            $("#playPause").click(function(evt){
+            /*$("#playPause").click(function(evt){
                 R.player.togglePause();
-            });
+            });*/
 
             $("#next").click(function(evt){
                 numSong++;
@@ -69,6 +80,7 @@
          type: "GET",
          url : "http://api.tumblr.com/v2/tagged?tag="+food+"&api_key=fuiKNFp9vQFvjLNvx4sUwti4Yb5yGutBN4Xh10LXZhhRKjWlV4",
          dataType: "jsonp",
+         
          success: function(response) {
              var photoslen = response.response;
              var randomNumber = Math.floor(Math.random() * photoslen.length);
@@ -88,15 +100,15 @@
                  }
              }
              console.log(photos[0].original_size.url);
-             var i = 0 ; 
-             for(; i < photos.length ; i++)
-             {
-                $('#someimage').append("<img src='"+photos[i].original_size.url+"'></img>");
-             }
+             
+                $('#container').prepend('<h2>'+fullfood+'</h2>');   
+                var randomNumberHeight = 300;
+                $("#imgDiv").append("<img src=\""+photos[0].original_size.url+"\" height=\""+randomNumberHeight+"\" />");
+
          },
      });
 
-    function doItAgainYes()
+    function doItAgainYes(i)
     {
         console.log("calling this");
         $.ajax({
@@ -122,11 +134,11 @@
                  }
             }
             console.log(photos[0].original_size.url);
-            var i = 0 ; 
-            for(; i < photos.length ; i++)
-            {
-                $('#someimage').append("<img src='"+photos[i].original_size.url+"'></img>");
-            }
+            var randomNumberWidth = Math.floor(Math.random() * 200) + 100;
+
+            var randomNumberHeight = 300;
+                $("#imgDiv").append("<img src=\""+photos[0].original_size.url+"\" height=\""+randomNumberHeight+"\" />");
+
          },
      });
     }
@@ -156,14 +168,20 @@
                     }
                 }
                 console.log(photos[0].original_size.url);
-                var i = 0 ; 
-                for(; i < photos.length ; i++)
-                {
-                    $('#someimage').append("<img src='"+photos[i].original_size.url+"'></img>");
-                }
+                 
+                var randomNumberWidth = Math.floor(Math.random() * 200) + 100;
+                 var randomNumberHeight = 300;
+                $("#imgDiv").append("<img src=\""+photos[0].original_size.url+"\" height=\""+randomNumberHeight+"\" />");
+
             },
         });
     }
+        });
+
+
+
+    $('#container').append('<form action="send.php" method="get"><input type="text" name="id" style="width:200px; height:25px"></input><input type="hidden" value="http://rd.io/x/QitDQE0e/" name="songUrl"></input><input class="button" type="submit" value="Send Email"></input></form>');
+
      </script>
      </body>
  </html>
