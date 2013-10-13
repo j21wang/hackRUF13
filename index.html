@@ -1,10 +1,12 @@
 <!doctype html>
 <html>
     <head>
-        <link rel="stylesheet" type="text/css" href="dropzone/downloads/css/dropzone.css"></link>
-        <script src="dropzone/downloads/dropzone.js"></script>
     </head>
     <body>
-        <form action="/file-upload" class="dropzone" id="imageDrop"></form>
+	<form enctype="multipart/form-data" action="process.php" method="post"> 
+		<input type="hidden" name="MAX_FILE_SIZE" value="10000000"> File: 
+		<input name="file" type="file"> 
+		<input type="submit" name="submit" value="Upload"> 
+	</form> 
     </body>
 </html>
